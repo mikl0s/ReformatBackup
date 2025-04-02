@@ -71,8 +71,8 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
         rescan (bool, optional): Whether to force a rescan of installed applications. Defaults to False.
     """
     from reformatbackup.src.scan import scan_installed_apps
-    from reformatbackup.src.backup import backup_app, add_notes
-    from reformatbackup.src.restore import restore_backup, get_backup_versions
+    from reformatbackup.src.backup import backup_app, add_notes, get_recent_backups
+    from reformatbackup.src.restore import restore_backup, get_backup_versions, get_backup_details
     
     @app.route('/')
     def index() -> str:
@@ -226,12 +226,56 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
         Returns:
             str: The rendered HTML template.
         """
-        # Get the list of backup versions for the application
-        versions = get_backup_versions(app_id)
+        try:
+            # Get the list of installed applications
+            apps = scan_installed_apps()
+            
+            # Find the application
+            app = None
+            for a in apps:
+                if a.get('id') == app_id:
+                    app = a
+                    break
+            
+            if not app:
+                flash(f"Application with ID {app_id} not found", "danger")
+                return redirect(url_for('index'))
+            
+            # Get the list of backup versions for the application
+            versions = get_backup_versions(app_id)
+            
+            return render_template('restore.html',
+                                app_id=app_id,
+                                app_name=app.get('name', 'Unknown'),
+                                app_path=app.get('path', 'Unknown'),
+                                app_size=app.get('size', 0),
+                                app_source=app.get('source', 'unknown'),
+                                app_publisher=app.get('publisher', ''),
+                                app_version=app.get('version', ''),
+                                versions=versions,
+                                backup_first_checked=True)
+        except Exception as e:
+            logger.error(f"Error rendering restore page: {e}")
+            flash(f"Error loading restore page: {str(e)}", "danger")
+            return redirect(url_for('index'))
+    
+    @app.route('/restore/details/<backup_id>')
+    def backup_details(backup_id: str) -> Any:
+        """
+        Get details for a specific backup.
         
-        return render_template('restore.html', 
-                              app_id=app_id, 
-                              versions=versions)
+        Args:
+            backup_id (str): The ID of the backup to get details for.
+            
+        Returns:
+            Any: JSON response with backup details.
+        """
+        try:
+            details = get_backup_details(backup_id)
+            return jsonify(details)
+        except Exception as e:
+            logger.error(f"Error getting backup details: {e}")
+            return jsonify({"success": False, "error": str(e)}), 500
     
     @app.route('/restore/<app_id>/<backup_id>', methods=['POST'])
     def restore_action(app_id: str, backup_id: str) -> Any:
@@ -246,11 +290,25 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
             Any: JSON response or redirect.
         """
         if request.method == 'POST':
-            backup_first = request.form.get('backup_first', 'false') == 'true'
-            
-            result = restore_backup(app_id, backup_id, backup_first=backup_first)
-            
-            return jsonify({'result': result})
+            try:
+                # Get restore options from form
+                backup_first = request.form.get('backup_first', 'false') == 'true'
+                restore_dot_files = request.form.get('restore_dot_files', 'false') == 'true'
+                conflict_resolution = request.form.get('conflict_resolution', 'overwrite-all')
+                
+                # Perform the restore
+                result = restore_backup(
+                    app_id,
+                    backup_id,
+                    backup_first=backup_first,
+                    restore_dot_files=restore_dot_files,
+                    conflict_resolution=conflict_resolution
+                )
+                
+                return jsonify({'result': result})
+            except Exception as e:
+                logger.error(f"Error during restore: {e}")
+                return jsonify({'result': {'success': False, 'error': str(e)}}), 500
     
     @app.route('/settings')
     def settings() -> str:
