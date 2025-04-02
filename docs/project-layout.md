@@ -9,7 +9,9 @@ reformatbackup/
 │   └── routes.py      # Flask routes
 ├── templates/
 │   ├── base.html      # Base template with theme toggle
-│   └── apps.html      # App list and restore UI
+│   ├── index.html     # Main app list view
+│   ├── backup.html    # Backup interface
+│   └── restore.html   # Restore interface
 ├── static/
 │   ├── css/
 │   │   └── styles.css # Theme definitions

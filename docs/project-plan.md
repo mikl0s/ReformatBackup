@@ -1,8 +1,8 @@
-# AppBackup Manager - Project Plan
+# ReformatBackup - Project Plan
 
 ## Project Overview
 
-AppBackup Manager is a Python-based Flask application designed to simplify the backup and restoration of application-specific user settings and data on Windows 11. It provides a modern web interface for users to manage app backups and restores, with features like auto-updates, themeable UI, and robust backup/restore functionality with metadata and notes.
+ReformatBackup is a Python-based Flask application designed to simplify the backup and restoration of application-specific user settings and data on Windows 11. It provides a modern web interface for users to manage app backups and restores, with features like auto-updates, themeable UI, and robust backup/restore functionality with metadata and notes.
 
 ## Architecture Diagram
 
@@ -247,7 +247,7 @@ classDiagram
 ### File Structure
 
 ```
-appbackup_manager/
+reformatbackup/
 ├── src/
 │   ├── __init__.py
 │   ├── main.py             # Entry point, Flask setup

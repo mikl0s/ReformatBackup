@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔄 AppBackup Manager
+# 🔄 ReformatBackup
 
 <img src="https://img.shields.io/badge/platform-Windows%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Platform: Windows 11">
 <img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.8+">
@@ -11,7 +11,7 @@
 <br>
 
 <p align="center">
-  <img src="appbackup_manager/static/img/logo.png" alt="AppBackup Manager Logo" width="800">
+  <img src="reformatbackup/static/img/logo.png" alt="ReformatBackup Logo" width="800">
 </p>
 
 **Effortlessly backup and restore your Windows application settings with a single command.**
@@ -33,16 +33,16 @@
 
 ## 📋 Overview
 
-AppBackup Manager is a lightweight, user-friendly tool designed to simplify the backup and restoration of application-specific user settings and data on Windows 11. It targets tech-savvy users, IT professionals, and gamers who need a portable, efficient solution to preserve app configurations without full system backups.
+ReformatBackup is a lightweight, user-friendly tool designed to simplify the backup and restoration of application-specific user settings and data on Windows 11. It targets tech-savvy users, IT professionals, and gamers who need a portable, efficient solution to preserve app configurations without full system backups.
 
-Unlike general-purpose backup software, AppBackup Manager focuses exclusively on user settings and data tied to installed applications, offering a streamlined alternative for preserving your carefully customized application environments. It intelligently identifies and includes hidden configuration files (dot files) and directories in your home folder that many applications use to store settings.
+Unlike general-purpose backup software, ReformatBackup focuses exclusively on user settings and data tied to installed applications, offering a streamlined alternative for preserving your carefully customized application environments. It intelligently identifies and includes hidden configuration files (dot files) and directories in your home folder that many applications use to store settings.
 
 ## 🔧 Installation
 
 Install with a single command:
 
 ```bash
-pip install appbackup-manager && appbackup-manager
+pip install reformatbackup && reformatbackup
 ```
 
 That's it! The application will launch in your default browser with a modern web interface.
@@ -50,10 +50,10 @@ That's it! The application will launch in your default browser with a modern web
 ## 📊 How It Works
 
 <div align="center">
-  <img src="appbackup_manager/static/img/logo.png" alt="AppBackup Manager Interface" width="800">
+  <img src="reformatbackup/static/img/logo.png" alt="ReformatBackup Interface" width="800">
 </div>
 
-1. **Scan** - AppBackup Manager scans your system for installed applications
+1. **Scan** - ReformatBackup scans your system for installed applications
 2. **Select** - Choose which applications you want to back up
 3. **Backup** - Create compressed backups of your application settings
 4. **Restore** - When needed, easily restore settings from any backup version
@@ -67,7 +67,7 @@ That's it! The application will launch in your default browser with a modern web
 
 ## 🛠️ Technical Details
 
-AppBackup Manager is built with:
+ReformatBackup is built with:
 
 - **Python 3.8+** - Core application logic
 - **Flask** - Web server and interface
@@ -78,7 +78,7 @@ The application creates two types of files:
 - **`<appname>-<timestamp>.7z`** - Compressed backup of application data (including dot files)
 - **`<appname>-<timestamp>.json`** - Metadata and user notes for the backup
 
-AppBackup Manager intelligently handles:
+ReformatBackup intelligently handles:
 - Standard application data folders (AppData\Local, AppData\Roaming)
 - Hidden configuration files in the user's home directory
 - Application-specific dot directories that follow Unix/Linux conventions
@@ -97,14 +97,14 @@ AppBackup Manager intelligently handles:
 Update to the latest version with:
 
 ```bash
-pip install --upgrade appbackup-manager
+pip install --upgrade reformatbackup
 ```
 
 Or use the convenient update button in the application interface.
 
 ## 🧩 For Developers
 
-AppBackup Manager supports rapid development with:
+ReformatBackup supports rapid development with:
 
 - Cached app scanning via `appscan.json`
 - Dynamic UI loading from local templates
@@ -123,5 +123,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 <div align="center">
   <p>Made with ❤️ for Windows power users</p>
-  <p>© 2025 AppBackup Manager</p>
+  <p>© 2025 ReformatBackup</p>
 </div>

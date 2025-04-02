@@ -1,7 +1,7 @@
 ### Coding Guidelines for the AI Coder
 
 #### Project Overview
-This guideline applies to the development of a Python-based Flask application for managing app backups and restores on Windows 11, distributed via PyPI. The tech stack includes Python 3.8+, Flask, `py7zr` for 7zip compression, and libraries like `winreg`, `psutil`, or `wmi` for system scanning. The app features a modern UI with light/dark themes, auto-updates, and JSON metadata handling.
+This guideline applies to the development of ReformatBackup, a Python-based Flask application for managing app backups and restores on Windows 11, distributed via PyPI. The tech stack includes Python 3.8+, Flask, `py7zr` for 7zip compression, and libraries like `winreg`, `psutil`, or `wmi` for system scanning. The app features a modern UI with light/dark themes, auto-updates, and JSON metadata handling.
 
 #### General Principles
 1. **File Size Limit:**  
@@ -42,27 +42,27 @@ This guideline applies to the development of a Python-based Flask application fo
    - Keep JS files small and focused (e.g., `theme.js`, `backup.js`), under 500 lines each.
 
 #### Project-Specific Rules
-1. **File Structure:**  
-   - Example layout:  
-     your_app/  
-     ├── src/  
-     │   ├── __init__.py  
-     │   ├── main.py         # Entry point, <500 lines  
-     │   ├── scan.py        # App scanning logic  
-     │   ├── backup.py      # Backup functionality  
-     │   ├── restore.py     # Restore functionality  
-     │   ├── utils.py       # Helpers (e.g., JSON, 7zip)  
-     │   └── routes.py      # Flask routes  
-     ├── templates/  
-     │   ├── base.html      # Base template with theme toggle  
-     │   └── apps.html      # App list and restore UI  
-     ├── static/  
-     │   ├── css/  
-     │   │   └── styles.css # Theme definitions  
-     │   └── js/  
-     │       └── app.js     # UI interactions  
-     ├── pyproject.toml     # Package config  
-     └── README.md  
+1. **File Structure:**
+   - Example layout:
+     reformatbackup/
+     ├── src/
+     │   ├── __init__.py
+     │   ├── main.py         # Entry point, <500 lines
+     │   ├── scan.py        # App scanning logic
+     │   ├── backup.py      # Backup functionality
+     │   ├── restore.py     # Restore functionality
+     │   ├── utils.py       # Helpers (e.g., JSON, 7zip)
+     │   └── routes.py      # Flask routes
+     ├── templates/
+     │   ├── base.html      # Base template with theme toggle
+     │   └── index.html     # App list and restore UI
+     ├── static/
+     │   ├── css/
+     │   │   └── styles.css # Theme definitions
+     │   └── js/
+     │       └── app.js     # UI interactions
+     ├── pyproject.toml     # Package config
+     └── README.md
    - Split files if any exceed 500 lines (e.g., move large route handlers to `routes_backup.py`).
 
 2. **Backup & Restore:**  

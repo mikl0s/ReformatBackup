@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
 
 ## Product Name
-AppBackup Manager
+ReformatBackup
 
 ## Version
 1.0
@@ -12,7 +12,7 @@ April 02, 2025
 ## Overview
 
 ### Purpose
-AppBackup Manager is a lightweight, user-friendly tool designed to simplify the backup and restoration of application-specific user settings and data on Windows 11. It targets tech-savvy users, IT professionals, and gamers who need a portable, efficient solution to preserve app configurations without full system backups.
+ReformatBackup is a lightweight, user-friendly tool designed to simplify the backup and restoration of application-specific user settings and data on Windows 11. It targets tech-savvy users, IT professionals, and gamers who need a portable, efficient solution to preserve app configurations without full system backups.
 
 ### Goals
 - Provide a single-command installable Python application via PyPI.
@@ -27,13 +27,13 @@ AppBackup Manager is a lightweight, user-friendly tool designed to simplify the 
 ## Features
 
 ### 1. Installation & Distribution
-- Requirement: Installable and runnable with a single command (e.g., `pip install appbackup-manager && appbackup-manager`).
+- Requirement: Installable and runnable with a single command (e.g., `pip install reformatbackup && reformatbackup`).
 - Details: Distributed as a Python package on PyPI, with all dependencies (Flask, py7zr, etc.) auto-installed via pip.
 - Success Criteria: Users can install and launch the app in one terminal command, assuming Python 3.8+ is present.
 
 ### 2. Auto-Updating
 - Requirement: Automatically check for updates and prompt the user to upgrade.
-- Details: On startup, query PyPI for newer versions and offer a one-click update via `pip install --upgrade appbackup-manager`.
+- Details: On startup, query PyPI for newer versions and offer a one-click update via `pip install --upgrade reformatbackup`.
 - Success Criteria: Users see an update prompt in the UI when a new version is available and can update without manual intervention.
 
 ### 3. App Scanning & Display
@@ -101,7 +101,7 @@ AppBackup Manager is a lightweight, user-friendly tool designed to simplify the 
 - Python must be pre-installed by the user.
 
 ## Deliverables
-1. PyPI Package: `appbackup-manager`, installable via `pip install appbackup-manager`.
+1. PyPI Package: `reformatbackup`, installable via `pip install reformatbackup`.
 2. Source Code: Well-commented, split into modules (e.g., `main.py`, `backup.py`, `restore.py`).
 3. Documentation: README with install, run, update, and dev instructions.
 
