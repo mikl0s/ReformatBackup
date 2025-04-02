@@ -21,7 +21,19 @@
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Installed Applications</h5>
-        <span id="selected-count" class="badge bg-primary">0 of {{ apps|length }} selected</span>
+        <div class="d-flex align-items-center">
+            <div class="dropdown me-3">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Sort By
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                    <li><button class="dropdown-item sort-apps" data-sort-by="name">Name</button></li>
+                    <li><button class="dropdown-item sort-apps" data-sort-by="size">Size</button></li>
+                    <li><button class="dropdown-item sort-apps" data-sort-by="drive">Drive</button></li>
+                </ul>
+            </div>
+            <span id="selected-count" class="badge bg-primary">0 of {{ apps|length }} selected</span>
+        </div>
     </div>
     <div class="card-body">
         <form id="backup-form" action="/backup" method="post">
@@ -42,6 +54,39 @@
             </div>
             
             <div class="app-list">
+                {% if apps %}
+                <div class="app-stats mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-0">Total Applications</h6>
+                                    <p class="card-text fs-4">{{ apps|length }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-0">Total Size</h6>
+                                    <p class="card-text fs-4">{{ apps|sum(attribute='size')|filesizeformat }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-0">Sources</h6>
+                                    <p class="card-text">
+                                        <span class="badge bg-primary">Registry: {{ apps|selectattr('source', 'equalto', 'registry')|list|length }}</span>
+                                        <span class="badge bg-secondary">File System: {{ apps|selectattr('source', 'equalto', 'file_system')|list|length }}</span>
+                                        <span class="badge bg-info">Dot Files: {{ apps|selectattr('source', 'equalto', 'dot_file')|list|length }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {% for app in apps %}
                 <div class="card app-card">
                     <div class="card-header">
@@ -52,6 +97,19 @@
                             </label>
                         </div>
                         <span class="app-size">{{ app.size|filesizeformat }}</span>
+                        {% if app.source == 'registry' %}
+                        <span class="badge bg-primary ms-2">Registry</span>
+                        {% elif app.source == 'file_system' %}
+                        <span class="badge bg-secondary ms-2">File System</span>
+                        {% elif app.source == 'dot_file' %}
+                        <span class="badge bg-info ms-2">Dot File</span>
+                        {% elif app.source == 'app_data' %}
+                        <span class="badge bg-warning ms-2">App Data</span>
+                        {% elif app.source == 'msstore' %}
+                        <span class="badge bg-success ms-2">MS Store</span>
+                        {% else %}
+                        <span class="badge bg-dark ms-2">{{ app.source }}</span>
+                        {% endif %}
                     </div>
                     <div class="card-body">
                         <p class="app-location mb-1">
@@ -60,6 +118,16 @@
                         <p class="app-drive mb-1">
                             <strong>Drive:</strong> {{ app.drive if app.drive else "Unknown" }}
                         </p>
+                        {% if app.publisher %}
+                        <p class="app-publisher mb-1">
+                            <strong>Publisher:</strong> {{ app.publisher }}
+                        </p>
+                        {% endif %}
+                        {% if app.version %}
+                        <p class="app-version mb-1">
+                            <strong>Version:</strong> {{ app.version }}
+                        </p>
+                        {% endif %}
                         {% if app.last_backup %}
                         <p class="last-backup mb-0">
                             <strong>Last Backup:</strong> {{ app.last_backup }}
@@ -85,8 +153,11 @@
             
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                 <a href="{{ url_for('index') }}?rescan=true" class="btn btn-secondary me-md-2">
-                    Rescan Applications
+                    <i class="bi bi-arrow-repeat"></i> Rescan Applications
                 </a>
+                <button type="button" class="btn btn-outline-info me-md-2" data-bs-toggle="modal" data-bs-target="#scanInfoModal">
+                    <i class="bi bi-info-circle"></i> Scan Info
+                </button>
                 <button type="submit" id="backup-button" class="btn btn-primary" disabled>
                     Backup Selected
                 </button>
@@ -159,7 +230,74 @@
     </div>
 </div>
 {% endblock %}
-
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/backup.js') }}"></script>
+{% endblock %}
+
+<!-- Scan Info Modal -->
+<div class="modal fade" id="scanInfoModal" tabindex="-1" aria-labelledby="scanInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scanInfoModalLabel">Application Scanning Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>How Applications Are Detected</h6>
+                <p>ReformatBackup scans your system using multiple methods to find installed applications:</p>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Registry Scanning</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>Scans the Windows Registry for installed applications in the following locations:</p>
+                        <ul>
+                            <li>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall</li>
+                            <li>HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall</li>
+                            <li>HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall</li>
+                            <li>Microsoft Store apps and Windows App Paths</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">File System Scanning</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>Scans common installation directories for applications:</p>
+                        <ul>
+                            <li>Program Files</li>
+                            <li>Program Files (x86)</li>
+                            <li>User's AppData folders</li>
+                            <li>Game directories (Steam, Epic, GOG)</li>
+                            <li>Custom game directories on all drives</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Dot Files Scanning</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>Scans for application-specific configuration files and directories:</p>
+                        <ul>
+                            <li>Dot files and directories in the user's home directory</li>
+                            <li>Application data in AppData folders</li>
+                            <li>Common configuration directories for applications like VS Code, Git, etc.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h6>Scan Caching</h6>
+                <p>Scan results are cached in <code>appscan.json</code> to improve performance. You can force a rescan using the "Rescan Applications" button.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

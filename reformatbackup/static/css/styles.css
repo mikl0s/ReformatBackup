@@ -30,6 +30,14 @@ body {
     margin-top: 20px;
 }
 
+.app-stats .card {
+    transition: transform 0.2s ease;
+}
+
+.app-stats .card:hover {
+    transform: translateY(-3px);
+}
+
 .app-card {
     margin-bottom: 15px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -59,6 +67,17 @@ body {
 .app-card .last-backup {
     font-size: 0.85rem;
     font-style: italic;
+}
+
+.app-publisher, .app-version {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+/* Sort dropdown */
+.sort-apps.active {
+    background-color: rgba(0, 123, 255, 0.1);
+    font-weight: bold;
 }
 
 /* Backup Section Styles */
@@ -137,6 +156,31 @@ body {
 /* Utility Classes */
 .cursor-pointer {
     cursor: pointer;
+}
+
+/* Badge styles for app sources */
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.badge.bg-dark {
+    background-color: var(--dark-color) !important;
 }
 
 .text-truncate-2 {
