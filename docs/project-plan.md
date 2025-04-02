@@ -85,27 +85,27 @@ graph TD
   - [x] Add size summaries per drive and total
 
 ### Epic 4: Backup Functionality
-- [ ] **Story 4.1**: Implement backup location management
-  - [ ] Create UI for setting backup location
-  - [ ] Develop storage of location in .reformatbackup
-  - [ ] Add validation and error handling
+- [x] **Story 4.1**: Implement backup location management
+  - [x] Create UI for setting backup location
+  - [x] Develop storage of location in .reformatbackup
+  - [x] Add validation and error handling
 
-- [ ] **Story 4.2**: Develop application backup logic
-  - [ ] Implement identification of app data locations
-  - [ ] Create functions to gather app data for backup
-  - [ ] Add progress tracking and reporting
-  - [ ] Include handling of dot files/directories in user home
+- [x] **Story 4.2**: Develop application backup logic
+  - [x] Implement identification of app data locations
+  - [x] Create functions to gather app data for backup
+  - [x] Add progress tracking and reporting
+  - [x] Include handling of dot files/directories in user home
 
-- [ ] **Story 4.3**: Implement 7zip compression
-  - [ ] Integrate py7zr library
-  - [ ] Create compression utility functions
-  - [ ] Implement naming convention with timestamps
-  - [ ] Ensure proper handling of hidden files during compression
+- [x] **Story 4.3**: Implement 7zip compression
+  - [x] Integrate py7zr library
+  - [x] Create compression utility functions
+  - [x] Implement naming convention with timestamps
+  - [x] Ensure proper handling of hidden files during compression
 
-- [ ] **Story 4.4**: Develop backup metadata
-  - [ ] Create JSON structure for backup metadata
-  - [ ] Implement notes functionality
-  - [ ] Add metadata storage alongside backups
+- [x] **Story 4.4**: Develop backup metadata
+  - [x] Create JSON structure for backup metadata
+  - [x] Implement notes functionality
+  - [x] Add metadata storage alongside backups
 
 ### Epic 5: Restore Functionality
 - [ ] **Story 5.1**: Implement backup version management

@@ -95,13 +95,15 @@ The configuration file is a JSON file with settings for backup location, auto-re
 ### 4. Backup Functionality (`backup.py`)
 
 The backup module handles:
-- Identifying application data locations
-- Compressing data using 7zip (via `py7zr`)
-- Creating metadata JSON files with timestamps and notes
-- Handling dot files and hidden directories
+- Identifying application data locations with intelligent detection
+- Compressing data using 7zip (via `py7zr`) with configurable compression levels
+- Creating detailed metadata JSON files with timestamps, notes, and configuration settings
+- Handling dot files and hidden directories with special detection for application-specific configurations
 - Managing backup versions with automatic cleanup of old backups
+- Supporting backup notes for documenting context and changes
+- Providing recent backup history for user reference
 
-Backups are named with the pattern `<appname>-<timestamp>.7z` and stored in the user-defined backup location.
+Backups are named with the pattern `<appname>-<timestamp>.7z` and stored in the user-defined backup location. The module supports various compression levels (from fastest to ultra) to balance speed and size based on user preferences. It also includes specialized handling for dot files and configuration directories in the user's home directory.
 
 ### 5. Restore Functionality (`restore.py`)
 
@@ -150,6 +152,15 @@ The main application view includes:
 - Detailed application metadata (size, location, publisher, version)
 - Statistics about scanned applications and drive usage
 - A modal dialog explaining the scanning process and detection methods
+- Quick backup functionality and a dedicated backup configuration option
+
+The backup interface includes:
+- Configurable compression level settings
+- Options for including dot files and configuration directories
+- Ability to add and edit notes for each backup
+- A list of selected applications with size and location information
+- Recent backup history with restore options
+- Progress indicators during backup operations
 
 The UI includes a settings page for managing backup location, theme preferences, update settings, and other application options. It also features an update notification system with a modal dialog for one-click updates.
 
