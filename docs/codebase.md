@@ -67,13 +67,19 @@ The application includes a one-click update mechanism that creates a temporary s
 ### 2. Application Scanning (`scan.py`)
 
 The scanning module is responsible for:
-- Detecting installed applications via Windows Registry
-- Scanning the file system for applications
-- Finding dot files in the user's home directory
-- Calculating application sizes
-- Caching scan results in `appscan.json`
+- Detecting installed applications via Windows Registry (including Microsoft Store apps)
+- Scanning the file system for applications across multiple drives
+- Finding application-specific dot files and configuration directories
+- Calculating application sizes with optimized performance
+- Caching scan results in `appscan.json` with detailed metadata
+- Providing sorting and filtering capabilities
 
-The scanning process can be resource-intensive, so results are cached to improve performance on subsequent runs. A `--rescan` flag or UI toggle can force a fresh scan.
+The scanning process uses multiple detection methods:
+1. **Registry Scanning**: Scans Windows Registry for installed applications, Microsoft Store apps, and Windows App Paths
+2. **File System Scanning**: Scans common installation directories, game libraries (Steam, Epic, GOG), and all available drives
+3. **Dot Files Scanning**: Identifies application-specific configuration files and directories in the user's home directory
+
+The scanning process is resource-intensive, so results are cached to improve performance on subsequent runs. A `--rescan` flag or UI toggle can force a fresh scan. The UI provides sorting options (by name, size, or drive) and filtering capabilities to help users navigate large application lists.
 
 ### 3. Configuration Management (`config.py`)
 
@@ -137,6 +143,13 @@ The UI is built with:
 - JavaScript for interactivity, theme switching, and update management
 
 The interface supports both light and dark themes, with dark as the default. Theme preferences are stored in both localStorage and the application configuration file. The application also supports system theme detection for automatic switching based on user preferences.
+
+The main application view includes:
+- A sortable and filterable list of detected applications
+- Visual indicators for application sources (Registry, File System, Dot Files)
+- Detailed application metadata (size, location, publisher, version)
+- Statistics about scanned applications and drive usage
+- A modal dialog explaining the scanning process and detection methods
 
 The UI includes a settings page for managing backup location, theme preferences, update settings, and other application options. It also features an update notification system with a modal dialog for one-click updates.
 
@@ -232,12 +245,17 @@ pip install .
 ```
 
 ## Key Concepts
-
 ### 1. Application Detection
 
 Applications are detected through multiple methods:
-- Windows Registry scanning
-- File system scanning of common installation directories
+- Windows Registry scanning (including Microsoft Store apps and Windows App Paths)
+- File system scanning of common installation directories and all available drives
+- Game library detection (Steam, Epic Games, GOG)
+- Dot file detection in the user's home directory
+- Application-specific configuration directories
+- AppData folder scanning for user settings
+
+The application uses intelligent detection to identify executables and application data, while filtering out system files and directories. Duplicate applications are handled by keeping the entry with the most complete information.
 - Dot file detection in the user's home directory
 
 ### 2. Backup and Restore Process
@@ -322,11 +340,14 @@ The application supports light and dark themes:
 
 Areas for potential enhancement:
 
-1. **Performance Optimization**: Improve scanning speed for large systems
+1. **Performance Optimization**: Further improve scanning speed for large systems
 2. **UI Enhancements**: Add more interactive features and visualizations
 3. **Additional Backup Options**: Support for cloud storage or network locations
 4. **Scheduled Backups**: Add ability to schedule automatic backups
 5. **Multi-platform Support**: Extend beyond Windows 11
+6. **Game Library Integration**: Deeper integration with game platforms for better backup/restore
+7. **Application Grouping**: Allow users to organize applications into custom groups
+8. **Backup Compression Options**: Provide different compression levels and formats
 
 ## Resources
 

@@ -67,22 +67,22 @@ graph TD
   - [x] Develop one-click update mechanism
 
 ### Epic 3: Application Scanning
-- [ ] **Story 3.1**: Implement Windows application scanning
-  - [ ] Develop Registry scanning using winreg
-  - [ ] Add file system scanning for installed applications
-  - [ ] Implement size calculation for applications
-  - [ ] Add detection of application-specific dot files/directories in user home
+- [x] **Story 3.1**: Implement Windows application scanning
+  - [x] Develop Registry scanning using winreg
+  - [x] Add file system scanning for installed applications
+  - [x] Implement size calculation for applications
+  - [x] Add detection of application-specific dot files/directories in user home
 
-- [ ] **Story 3.2**: Create scan caching mechanism
-  - [ ] Implement appscan.json file structure
-  - [ ] Add functions to read/write cache
-  - [ ] Create rescan functionality (flag and UI toggle)
-  - [ ] Include dot files/directories information in cache
+- [x] **Story 3.2**: Create scan caching mechanism
+  - [x] Implement appscan.json file structure
+  - [x] Add functions to read/write cache
+  - [x] Create rescan functionality (flag and UI toggle)
+  - [x] Include dot files/directories information in cache
 
-- [ ] **Story 3.3**: Develop application data display
-  - [ ] Create UI components for app listing
-  - [ ] Implement sorting and filtering
-  - [ ] Add size summaries per drive and total
+- [x] **Story 3.3**: Develop application data display
+  - [x] Create UI components for app listing
+  - [x] Implement sorting and filtering
+  - [x] Add size summaries per drive and total
 
 ### Epic 4: Backup Functionality
 - [ ] **Story 4.1**: Implement backup location management
