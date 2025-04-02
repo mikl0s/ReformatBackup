@@ -1,0 +1,190 @@
+/* 
+ * AppBackup Manager - Main Styles
+ */
+
+/* Global Styles */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* App List Styles */
+.app-list {
+    margin-top: 20px;
+}
+
+.app-card {
+    margin-bottom: 15px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.app-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.app-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-card .app-size {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.app-card .app-location {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+.app-card .last-backup {
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Backup Section Styles */
+.backup-section {
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.backup-location {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.backup-location input {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.backup-progress {
+    margin-top: 20px;
+}
+
+/* Restore Section Styles */
+.restore-section {
+    margin-top: 30px;
+}
+
+.version-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.version-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.version-item:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.version-item.active {
+    background-color: rgba(0, 123, 255, 0.2);
+    border-left: 3px solid var(--primary-color);
+}
+
+.version-timestamp {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.version-size {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+.version-notes {
+    margin-top: 10px;
+    font-style: italic;
+}
+
+/* Settings Styles */
+.settings-section {
+    margin-top: 30px;
+}
+
+.settings-card {
+    margin-bottom: 20px;
+}
+
+/* Utility Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Theme Toggle */
+#theme-toggle {
+    position: relative;
+    width: 80px;
+}
+
+.theme-icon-light,
+.theme-icon-dark {
+    position: absolute;
+    left: 10px;
+    transition: opacity 0.3s ease;
+}
+
+body[data-theme="light"] .theme-icon-light {
+    opacity: 0;
+}
+
+body[data-theme="light"] .theme-icon-dark {
+    opacity: 1;
+}
+
+body[data-theme="dark"] .theme-icon-light {
+    opacity: 1;
+}
+
+body[data-theme="dark"] .theme-icon-dark {
+    opacity: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .backup-location {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .backup-location input {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+}
