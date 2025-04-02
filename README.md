@@ -11,7 +11,7 @@
 <br>
 
 <p align="center">
-  <img src="https://via.placeholder.com/800x400?text=AppBackup+Manager" alt="AppBackup Manager Hero Image" width="800">
+  <img src="appbackup_manager/static/img/logo.png" alt="AppBackup Manager Logo" width="800">
 </p>
 
 **Effortlessly backup and restore your Windows application settings with a single command.**
@@ -50,7 +50,7 @@ That's it! The application will launch in your default browser with a modern web
 ## 📊 How It Works
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x500?text=AppBackup+Manager+Interface" alt="AppBackup Manager Interface" width="800">
+  <img src="appbackup_manager/static/img/logo.png" alt="AppBackup Manager Interface" width="800">
 </div>
 
 1. **Scan** - AppBackup Manager scans your system for installed applications
