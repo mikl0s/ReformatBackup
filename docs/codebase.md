@@ -40,6 +40,10 @@ reformatbackup/
 │   ├── test_restore.py
 │   └── test_utils.py
 ├── pyproject.toml          # Package configuration
+├── requirements.txt        # Development dependencies
+├── setup.cfg               # Configuration for development tools
+├── pytest.ini              # Pytest configuration
+├── DEVELOPMENT.md          # Development guide
 └── __init__.py             # Root package initialization
 ```
 
@@ -48,13 +52,17 @@ reformatbackup/
 ### 1. Entry Point and Flask Setup (`main.py`)
 
 The application entry point is in `main.py`, which:
-- Initializes the Flask application
+- Initializes the Flask application using the application factory pattern
+- Sets up configuration for development and production environments
+- Registers error handlers for common HTTP errors
 - Sets up command-line argument parsing
-- Checks for updates on PyPI
+- Checks for updates on PyPI and provides update functionality
 - Launches the default web browser
-- Starts the Flask server
+- Starts the Flask server with appropriate configuration
 
 The main function is registered as a console script entry point in `pyproject.toml`, allowing the application to be run with the `reformatbackup` command after installation.
+
+The application includes a one-click update mechanism that creates a temporary script to update the package using pip, which runs in a separate process to avoid interrupting the current session.
 
 ### 2. Application Scanning (`scan.py`)
 
@@ -67,18 +75,29 @@ The scanning module is responsible for:
 
 The scanning process can be resource-intensive, so results are cached to improve performance on subsequent runs. A `--rescan` flag or UI toggle can force a fresh scan.
 
-### 3. Backup Functionality (`backup.py`)
+### 3. Configuration Management (`config.py`)
+
+The configuration module handles:
+- Reading and writing application settings to `.reformatbackup` in the user's home directory
+- Managing backup location, theme preferences, and update settings
+- Providing default configuration values
+- Validating user inputs for configuration settings
+- Handling configuration errors gracefully
+
+The configuration file is a JSON file with settings for backup location, auto-rescan, theme, update checking, and other application preferences.
+
+### 4. Backup Functionality (`backup.py`)
 
 The backup module handles:
-- Setting and retrieving the backup location from `.reformatbackup`
 - Identifying application data locations
 - Compressing data using 7zip (via `py7zr`)
 - Creating metadata JSON files with timestamps and notes
 - Handling dot files and hidden directories
+- Managing backup versions with automatic cleanup of old backups
 
 Backups are named with the pattern `<appname>-<timestamp>.7z` and stored in the user-defined backup location.
 
-### 4. Restore Functionality (`restore.py`)
+### 5. Restore Functionality (`restore.py`)
 
 The restore module manages:
 - Listing available backup versions for an application
@@ -88,7 +107,7 @@ The restore module manages:
 
 Two restore options are provided: direct restore or backup-then-restore.
 
-### 5. Utility Functions (`utils.py`)
+### 6. Utility Functions (`utils.py`)
 
 Common utility functions include:
 - 7zip compression and extraction
@@ -97,34 +116,51 @@ Common utility functions include:
 - Size formatting
 - Timestamp formatting
 
-### 6. Flask Routes (`routes.py`)
+### 7. Flask Routes (`routes.py`)
 
 The routes module defines all HTTP endpoints:
 - Main application view (`/`)
 - Backup endpoint (`/backup`)
 - Restore view and action (`/restore/<app_id>` and `/restore/<app_id>/<backup_id>`)
 - Settings management (`/settings`)
+- Update management (`/update`)
+- Configuration API endpoints (`/settings/update-check`)
 
-### 7. User Interface
+The routes are set up using a function-based approach with proper error handling and type hints. Helper functions for calculating drive sizes and retrieving recent backups are also included.
+
+### 8. User Interface
 
 The UI is built with:
 - Flask templates (Jinja2)
 - Bootstrap for responsive layout
 - Custom CSS for styling and themes
-- JavaScript for interactivity and theme switching
+- JavaScript for interactivity, theme switching, and update management
 
-The interface supports both light and dark themes, with dark as the default.
+The interface supports both light and dark themes, with dark as the default. Theme preferences are stored in both localStorage and the application configuration file. The application also supports system theme detection for automatic switching based on user preferences.
+
+The UI includes a settings page for managing backup location, theme preferences, update settings, and other application options. It also features an update notification system with a modal dialog for one-click updates.
+
+Error handling is implemented with dedicated error templates that provide user-friendly error messages while logging detailed information for debugging.
 
 ## Configuration Files
 
 ### 1. User Configuration
 
-- `.reformatbackup`: JSON file in the user's home directory storing the backup location
+- `.reformatbackup`: JSON file in the user's home directory storing all application settings:
+  - Backup location
+  - Theme preference
+  - Update checking settings
+  - Auto-rescan settings
+  - Compression level
+  - Maximum backups per application
 - `appscan.json`: Cache of scanned applications to improve performance
 
 ### 2. Package Configuration
 
 - `pyproject.toml`: Defines package metadata, dependencies, and entry points
+- `requirements.txt`: Lists development dependencies
+- `setup.cfg`: Configures development tools like flake8 and isort
+- `pytest.ini`: Configures pytest for testing
 
 ## Development Workflow
 
@@ -135,10 +171,18 @@ The interface supports both light and dark themes, with dark as the default.
    ```bash
    pip install -e ".[dev]"
    ```
+   
+   Alternatively, you can install from requirements.txt:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
 3. Run the application in development mode:
    ```bash
    python -m reformatbackup.src.main --debug
    ```
+
+4. For detailed development instructions, refer to the DEVELOPMENT.md file in the project root.
 
 ### Making Changes
 
@@ -163,6 +207,16 @@ When making changes to the codebase, keep in mind:
 Run tests using pytest:
 ```bash
 pytest
+```
+
+Run tests with coverage report:
+```bash
+pytest --cov=reformatbackup
+```
+
+Generate an HTML coverage report:
+```bash
+pytest --cov=reformatbackup --cov-report=html
 ```
 
 ### Building and Installing
@@ -245,8 +299,9 @@ The application supports light and dark themes:
 2. **Type Hints**: Use Python type hints for better code readability and IDE support
 3. **Documentation**: Keep docstrings and comments up to date
 4. **Testing**: Write tests for new functionality
-5. **Code Style**: Follow PEP 8 guidelines
-6. **Commit Messages**: Write clear, descriptive commit messages
+5. **Code Style**: Follow PEP 8 guidelines (enforced by flake8)
+6. **Code Formatting**: Use Black and isort for consistent code formatting
+7. **Commit Messages**: Write clear, descriptive commit messages
 
 ## Troubleshooting
 

@@ -44,27 +44,27 @@ graph TD
   - [x] Define command-line entry point
   - [x] Set up version management
 
-- [ ] **Story 1.3**: Establish development environment
-  - [ ] Create requirements.txt for development dependencies
-  - [ ] Set up linting with flake8
-  - [ ] Configure testing with pytest
+- [x] **Story 1.3**: Establish development environment
+  - [x] Create requirements.txt for development dependencies
+  - [x] Set up linting with flake8
+  - [x] Configure testing with pytest
 
 ### Epic 2: Core Application Framework
-- [ ] **Story 2.1**: Implement Flask application structure
-  - [ ] Create main application entry point
-  - [ ] Set up Flask server configuration
-  - [ ] Implement browser launch functionality
-  - [ ] Create base template with theme support
+- [x] **Story 2.1**: Implement Flask application structure
+  - [x] Create main application entry point
+  - [x] Set up Flask server configuration
+  - [x] Implement browser launch functionality
+  - [x] Create base template with theme support
 
-- [ ] **Story 2.2**: Develop configuration management
-  - [ ] Implement .reformatbackup file handling
-  - [ ] Create utility functions for reading/writing configuration
-  - [ ] Add backup location management
+- [x] **Story 2.2**: Develop configuration management
+  - [x] Implement .reformatbackup file handling
+  - [x] Create utility functions for reading/writing configuration
+  - [x] Add backup location management
 
-- [ ] **Story 2.3**: Create auto-update functionality
-  - [ ] Implement version checking against PyPI
-  - [ ] Add update notification in UI
-  - [ ] Develop one-click update mechanism
+- [x] **Story 2.3**: Create auto-update functionality
+  - [x] Implement version checking against PyPI
+  - [x] Add update notification in UI
+  - [x] Develop one-click update mechanism
 
 ### Epic 3: Application Scanning
 - [ ] **Story 3.1**: Implement Windows application scanning
