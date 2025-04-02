@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}ReformatBackup - Backup{% endblock %}
+
+{% block content %}
+<div id="alerts-container"></div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h1>Backup Applications</h1>
+        <p class="lead">Create backups of your selected applications.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Backup Configuration</h5>
+    </div>
+    <div class="card-body">
+        <form id="backup-form" action="/backup" method="post">
+            <div class="mb-3">
+                <label for="backup-location" class="form-label">Backup Location</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="backup-location" name="backup_location" value="{{ backup_location }}" readonly>
+                    <a href="{{ url_for('settings') }}" class="btn btn-secondary">Change</a>
+                </div>
+                <div class="form-text">This is where your application backups will be stored.</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Compression Level</label>
+                <select class="form-select" id="compression-level" name="compression_level">
+                    <option value="1" {% if compression_level == 1 %}selected{% endif %}>Level 1 (Fastest)</option>
+                    <option value="3" {% if compression_level == 3 %}selected{% endif %}>Level 3 (Fast)</option>
+                    <option value="5" {% if compression_level == 5 %}selected{% endif %}>Level 5 (Normal)</option>
+                    <option value="7" {% if compression_level == 7 %}selected{% endif %}>Level 7 (Maximum)</option>
+                    <option value="9" {% if compression_level == 9 %}selected{% endif %}>Level 9 (Ultra)</option>
+                </select>
+                <div class="form-text">Higher compression levels result in smaller backups but take longer to create.</div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="backup-dot-files" name="backup_dot_files" {% if backup_dot_files %}checked{% endif %}>
+                    <label class="form-check-label" for="backup-dot-files">Include dot files and configuration directories</label>
+                </div>
+                <div class="form-text">When enabled, configuration files in your home directory will be included in the backup.</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="backup-notes" class="form-label">Backup Notes</label>
+                <textarea class="form-control" id="backup-notes" name="notes" rows="3" placeholder="Optional notes about this backup (e.g., 'Before Windows update')"></textarea>
+            </div>
+            
+            <hr>
+            
+            <h5 class="mb-3">Selected Applications</h5>
+            
+            {% if selected_apps %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Size</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in selected_apps %}
+                        <tr>
+                            <td>
+                                <input type="hidden" name="app_ids" value="{{ app.id }}">
+                                {{ app.name }}
+                                {% if app.source == 'registry' %}
+                                <span class="badge bg-primary ms-2">Registry</span>
+                                {% elif app.source == 'file_system' %}
+                                <span class="badge bg-secondary ms-2">File System</span>
+                                {% elif app.source == 'dot_file' %}
+                                <span class="badge bg-info ms-2">Dot File</span>
+                                {% elif app.source == 'app_data' %}
+                                <span class="badge bg-warning ms-2">App Data</span>
+                                {% else %}
+                                <span class="badge bg-dark ms-2">{{ app.source }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ app.size|filesizeformat }}</td>
+                            <td class="text-truncate" style="max-width: 200px;">{{ app.path }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-app" data-app-id="{{ app.id }}">Remove</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">
+                    Back to Application List
+                </a>
+                <button type="submit" id="backup-button" class="btn btn-primary">
+                    Start Backup
+                </button>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <p>No applications selected for backup.</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Select Applications</a>
+            </div>
+            {% endif %}
+            
+            <div id="backup-progress" class="progress mt-4 d-none">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if previous_backups %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Previous Backups</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>Date</th>
+                        <th>Size</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backup in previous_backups %}
+                    <tr>
+                        <td>{{ backup.app_name }}</td>
+                        <td>{{ backup.timestamp|format_timestamp }}</td>
+                        <td>{{ backup.size|filesizeformat }}</td>
+                        <td>{{ backup.notes|truncate(50) }}</td>
+                        <td>
+                            <a href="{{ url_for('restore_view', app_id=backup.app_id) }}" class="btn btn-sm btn-outline-primary">Restore</a>
+                            <button type="button" class="btn btn-sm btn-outline-secondary edit-notes" data-backup-id="{{ backup.id }}" data-notes="{{ backup.notes }}">Edit Notes</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Edit Notes Modal -->
+<div class="modal fade" id="editNotesModal" tabindex="-1" aria-labelledby="editNotesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editNotesModalLabel">Edit Backup Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-notes-form">
+                    <input type="hidden" id="edit-backup-id" name="backup_id">
+                    <div class="mb-3">
+                        <label for="edit-notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="edit-notes" name="notes" rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-notes">Save Notes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/backup.js') }}"></script>
+{% endblock %}
