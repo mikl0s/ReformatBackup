@@ -39,10 +39,10 @@ graph TD
   - [x] Create initial README.md
   - [x] Set up .gitignore file
 
-- [ ] **Story 1.2**: Configure package for PyPI distribution
-  - [ ] Create pyproject.toml with metadata and dependencies
-  - [ ] Define command-line entry point
-  - [ ] Set up version management
+- [x] **Story 1.2**: Configure package for PyPI distribution
+  - [x] Create pyproject.toml with metadata and dependencies
+  - [x] Define command-line entry point
+  - [x] Set up version management
 
 - [ ] **Story 1.3**: Establish development environment
   - [ ] Create requirements.txt for development dependencies
