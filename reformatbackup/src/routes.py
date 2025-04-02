@@ -78,8 +78,10 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
             str: The rendered HTML template.
         """
         try:
+            # Check if rescan is requested
+            force_rescan = request.args.get('rescan', 'false').lower() == 'true'
             # Get the list of installed applications
-            apps = scan_installed_apps(force_rescan=rescan)
+            apps = scan_installed_apps(force_rescan=force_rescan or rescan)
             
             # Get the backup location
             backup_location = get_backup_location()
@@ -90,11 +92,24 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
             # Get recent backups (if any)
             recent_backups = get_recent_backups(limit=5)
             
+            # Group apps by source for statistics
+            app_sources = {}
+            for app in apps:
+                source = app.get('source', 'unknown')
+                if source in app_sources:
+                    app_sources[source] += 1
+                else:
+                    app_sources[source] = 1
+            
+            # Sort apps by name by default
+            apps = sorted(apps, key=lambda x: x.get('name', '').lower())
+            
             return render_template('index.html',
                                   apps=apps,
                                   backup_location=backup_location,
                                   drive_sizes=drive_sizes,
                                   recent_backups=recent_backups,
+                                  app_sources=app_sources,
                                   update_available=app.config.get('UPDATE_AVAILABLE', False))
         except Exception as e:
             logger.error(f"Error rendering index page: {e}")
