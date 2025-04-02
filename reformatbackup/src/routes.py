@@ -8,11 +8,16 @@ import os
 import logging
 from typing import Any, Dict, List, Optional
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, current_app
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, current_app, session
 
 from reformatbackup.src.config import (
     get_check_updates,
-    set_check_updates
+    set_check_updates,
+    get_backup_location,
+    get_compression_level,
+    set_compression_level,
+    get_backup_dot_files,
+    set_backup_dot_files
 )
 
 # Set up logging
@@ -66,7 +71,7 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
         rescan (bool, optional): Whether to force a rescan of installed applications. Defaults to False.
     """
     from reformatbackup.src.scan import scan_installed_apps
-    from reformatbackup.src.backup import backup_app, get_backup_location
+    from reformatbackup.src.backup import backup_app, add_notes
     from reformatbackup.src.restore import restore_backup, get_backup_versions
     
     @app.route('/')
@@ -117,26 +122,98 @@ def setup_routes(app: Flask, rescan: bool = False) -> None:
                                   error_code=500,
                                   error_message=f"Error loading application data: {str(e)}"), 500
     
-    @app.route('/backup', methods=['POST'])
+    @app.route('/backup', methods=['GET', 'POST'])
     def backup() -> Any:
         """
-        Handle backup requests.
+        Handle backup requests and display the backup page.
         
         Returns:
-            Any: JSON response or redirect.
+            Any: JSON response, rendered template, or redirect.
         """
+        # Get the backup location
+        backup_location = get_backup_location()
+        
         if request.method == 'POST':
             app_ids = request.form.getlist('app_ids')
             
             if not app_ids:
                 return jsonify({'error': 'No applications selected for backup'}), 400
             
+            # Get backup options from form
+            compression_level = int(request.form.get('compression_level', get_compression_level()))
+            backup_dot_files = request.form.get('backup_dot_files', '') == 'on'
+            notes = request.form.get('notes', '')
+            
+            # Update configuration if needed
+            if compression_level != get_compression_level():
+                set_compression_level(compression_level)
+            
+            if backup_dot_files != get_backup_dot_files():
+                set_backup_dot_files(backup_dot_files)
+            
+            # Perform backups
             results = []
             for app_id in app_ids:
+                # Pass options to backup_app
                 result = backup_app(app_id)
+                
+                # Add notes if provided and backup was successful
+                if notes and result.get('success', False):
+                    backup_id = f"{app_id}-{result.get('timestamp', '')}"
+                    add_notes(backup_id, notes)
+                
                 results.append(result)
             
             return jsonify({'results': results})
+        else:
+            # GET request - display backup page
+            # Check if we have app_ids in the query string or session
+            app_ids = request.args.getlist('app_ids') or session.get('selected_app_ids', [])
+            
+            if not app_ids:
+                # No apps selected, redirect to index
+                return redirect(url_for('index'))
+            
+            # Store selected app_ids in session
+            session['selected_app_ids'] = app_ids
+            
+            # Get app details for the selected apps
+            apps = scan_installed_apps()
+            selected_apps = [app for app in apps if app.get('id') in app_ids]
+            
+            # Get previous backups
+            previous_backups = get_recent_backups(limit=10)
+            
+            return render_template('backup.html',
+                                  backup_location=backup_location,
+                                  compression_level=get_compression_level(),
+                                  backup_dot_files=get_backup_dot_files(),
+                                  selected_apps=selected_apps,
+                                  previous_backups=previous_backups)
+    
+    @app.route('/backup/notes', methods=['POST'])
+    def update_backup_notes() -> Any:
+        """
+        Update notes for a backup.
+        
+        Returns:
+            Any: JSON response with success status.
+        """
+        try:
+            data = request.json
+            backup_id = data.get('backup_id')
+            notes = data.get('notes', '')
+            
+            if not backup_id:
+                return jsonify({'success': False, 'error': 'No backup ID provided'}), 400
+            
+            # Update the notes
+            success = add_notes(backup_id, notes)
+            
+            return jsonify({'success': success})
+        except Exception as e:
+            logger.error(f"Error updating backup notes: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
     
     @app.route('/restore/<app_id>')
     def restore_view(app_id: str) -> str:
