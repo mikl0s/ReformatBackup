@@ -148,10 +148,12 @@ The routes are set up using a function-based approach with proper error handling
 The UI is built with:
 - Flask templates (Jinja2)
 - Bootstrap for responsive layout
-- Custom CSS for styling and themes
+- Custom CSS for styling and themes (styles.css and themes.css)
 - JavaScript for interactivity, theme switching, and update management
 
-The interface supports both light and dark themes, with dark as the default. Theme preferences are stored in both localStorage and the application configuration file. The application also supports system theme detection for automatic switching based on user preferences.
+The interface supports both light and dark themes, with dark as the default. Theme preferences are stored in both localStorage and the application configuration file. The application also supports system theme detection for automatic switching based on user preferences. The theme toggle button in the navigation bar allows users to manually switch between themes.
+
+The UI follows responsive design principles, ensuring a consistent experience across desktop and mobile devices. CSS variables are used extensively to maintain a consistent color scheme throughout the application, with separate variable sets for light and dark themes.
 
 The main application view includes:
 - A sortable and filterable list of detected applications

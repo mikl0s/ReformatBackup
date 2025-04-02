@@ -126,30 +126,30 @@ graph TD
   - [x] Ensure proper restoration of hidden files with correct permissions
 
 ### Epic 6: User Interface
-- [ ] **Story 6.1**: Develop base UI framework
-  - [ ] Create responsive layout with Bootstrap/Tailwind
-  - [ ] Implement light/dark theme support
-  - [ ] Add theme toggle functionality
+- [x] **Story 6.1**: Develop base UI framework
+  - [x] Create responsive layout with Bootstrap/Tailwind
+  - [x] Implement light/dark theme support
+  - [x] Add theme toggle functionality
 
-- [ ] **Story 6.2**: Implement application list UI
-  - [ ] Create app list with checkboxes
-  - [ ] Add size and location display
-  - [ ] Implement last backup date indication
+- [x] **Story 6.2**: Implement application list UI
+  - [x] Create app list with checkboxes
+  - [x] Add size and location display
+  - [x] Implement last backup date indication
 
-- [ ] **Story 6.3**: Develop backup UI components
-  - [ ] Create backup location input
-  - [ ] Implement app selection controls
-  - [ ] Add backup button and progress indicators
+- [x] **Story 6.3**: Develop backup UI components
+  - [x] Create backup location input
+  - [x] Implement app selection controls
+  - [x] Add backup button and progress indicators
 
-- [ ] **Story 6.4**: Implement restore UI components
-  - [ ] Create version selection dropdown/list
-  - [ ] Add restore option buttons
-  - [ ] Implement notes editing interface
+- [x] **Story 6.4**: Implement restore UI components
+  - [x] Create version selection dropdown/list
+  - [x] Add restore option buttons
+  - [x] Implement notes editing interface
 
-- [ ] **Story 6.5**: Develop feedback and notification system
-  - [ ] Create toast/notification component
-  - [ ] Implement progress bars for operations
-  - [ ] Add error message display
+- [x] **Story 6.5**: Develop feedback and notification system
+  - [x] Create toast/notification component
+  - [x] Implement progress bars for operations
+  - [x] Add error message display
 
 ### Epic 7: Testing and Quality Assurance
 - [ ] **Story 7.1**: Implement unit testing
