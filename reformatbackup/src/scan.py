@@ -110,6 +110,10 @@ def _scan_registry() -> List[Dict[str, Any]]:
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
         (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
         (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+        # Add Microsoft Store apps
+        (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages"),
+        # Add Windows Apps
+        (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths"),
     ]
     
     for hkey, path in registry_paths:
@@ -121,39 +125,100 @@ def _scan_registry() -> List[Dict[str, Any]]:
                     subkey = winreg.OpenKey(key, subkey_name)
                     
                     try:
-                        name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                        # For standard applications
+                        if "Uninstall" in path:
+                            name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                            
+                            # Skip entries without a name
+                            if not name:
+                                continue
+                            
+                            app = {"id": subkey_name, "name": name, "source": "registry"}
+                            
+                            # Get install location
+                            try:
+                                app["path"] = winreg.QueryValueEx(subkey, "InstallLocation")[0]
+                            except Exception:
+                                pass
+                            
+                            # Get uninstall string
+                            try:
+                                app["uninstall"] = winreg.QueryValueEx(subkey, "UninstallString")[0]
+                            except Exception:
+                                pass
+                            
+                            # Get publisher
+                            try:
+                                app["publisher"] = winreg.QueryValueEx(subkey, "Publisher")[0]
+                            except Exception:
+                                pass
+                            
+                            # Get version
+                            try:
+                                app["version"] = winreg.QueryValueEx(subkey, "DisplayVersion")[0]
+                            except Exception:
+                                pass
+                            
+                            # Get install date
+                            try:
+                                app["install_date"] = winreg.QueryValueEx(subkey, "InstallDate")[0]
+                            except Exception:
+                                pass
+                            
+                        # For Microsoft Store apps
+                        elif "Packages" in path:
+                            # Use the package name as the display name if DisplayName is not available
+                            app = {"id": f"msstore-{subkey_name}", "name": subkey_name, "source": "msstore"}
+                            
+                            try:
+                                # Try to get a more user-friendly name
+                                display_name_key = winreg.OpenKey(subkey, "DisplayName")
+                                app["name"] = winreg.QueryValueEx(display_name_key, "")[0]
+                                winreg.CloseKey(display_name_key)
+                            except Exception:
+                                # If we can't get a display name, clean up the package name
+                                app["name"] = subkey_name.split('_')[0].replace('.', ' ')
+                            
+                            # Get package path
+                            try:
+                                path_key = winreg.OpenKey(subkey, "Path")
+                                app["path"] = winreg.QueryValueEx(path_key, "")[0]
+                                winreg.CloseKey(path_key)
+                            except Exception:
+                                pass
                         
-                        # Skip entries without a name
-                        if not name:
-                            continue
-                        
-                        app = {"id": subkey_name, "name": name, "source": "registry"}
-                        
-                        # Get install location
-                        try:
-                            app["path"] = winreg.QueryValueEx(subkey, "InstallLocation")[0]
-                        except:
-                            pass
-                        
-                        # Get uninstall string
-                        try:
-                            app["uninstall"] = winreg.QueryValueEx(subkey, "UninstallString")[0]
-                        except:
-                            pass
+                        # For Windows App Paths
+                        elif "App Paths" in path:
+                            app = {"id": f"apppath-{subkey_name}", "name": subkey_name, "source": "apppath"}
+                            
+                            # Get executable path
+                            try:
+                                app["path"] = winreg.QueryValueEx(subkey, "")[0]
+                            except Exception:
+                                pass
                         
                         apps.append(app)
-                    except:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Error processing registry key {subkey_name}: {e}")
                     
                     winreg.CloseKey(subkey)
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Error enumerating registry key {i}: {e}")
             
             winreg.CloseKey(key)
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Error opening registry key {path}: {e}")
     
-    return apps
+    # Remove duplicates based on name and path
+    unique_apps = {}
+    for app in apps:
+        # Create a unique key based on name and path if available
+        key = f"{app['name']}_{app.get('path', '')}"
+        # Keep the entry with the most information
+        if key not in unique_apps or len(app) > len(unique_apps[key]):
+            unique_apps[key] = app
+    
+    return list(unique_apps.values())
 
 def _scan_file_system() -> List[Dict[str, Any]]:
     """
@@ -169,47 +234,190 @@ def _scan_file_system() -> List[Dict[str, Any]]:
         os.path.join(os.environ["ProgramFiles"]),
         os.path.join(os.environ["ProgramFiles(x86)"]),
         os.path.join(os.environ["LOCALAPPDATA"], "Programs"),
+        os.path.join(os.environ["APPDATA"]),
+        os.path.join(os.environ["LOCALAPPDATA"]),
+        # Add Steam games directory if it exists
+        os.path.join(os.environ["ProgramFiles(x86)"], "Steam", "steamapps", "common"),
+        os.path.join(os.environ["ProgramFiles"], "Steam", "steamapps", "common"),
+        # Add Epic Games directory if it exists
+        os.path.join(os.environ["ProgramFiles"], "Epic Games"),
+        # Add GOG Games directory if it exists
+        os.path.join(os.environ["ProgramFiles"], "GOG Galaxy", "Games"),
     ]
     
+    # Filter out non-existent directories
+    install_dirs = [d for d in install_dirs if os.path.exists(d)]
+    
+    # Add all drive roots to scan for game installations
+    for drive in _get_available_drives():
+        game_dirs = [
+            os.path.join(drive, "Games"),
+            os.path.join(drive, "SteamLibrary", "steamapps", "common"),
+            os.path.join(drive, "Epic Games"),
+            os.path.join(drive, "GOG Games"),
+        ]
+        install_dirs.extend([d for d in game_dirs if os.path.exists(d)])
+    
     for install_dir in install_dirs:
-        if os.path.exists(install_dir):
+        try:
             for app_dir in os.listdir(install_dir):
                 app_path = os.path.join(install_dir, app_dir)
                 if os.path.isdir(app_path):
-                    apps.append({
-                        "id": app_dir.lower().replace(" ", "-"),
-                        "name": app_dir,
-                        "path": app_path,
-                        "source": "file_system",
-                    })
+                    # Skip system directories and hidden directories
+                    if app_dir.startswith('.') or app_dir in ["Windows", "Program Files", "Program Files (x86)", "Users", "ProgramData"]:
+                        continue
+                    
+                    # Check if this is likely an application by looking for executables
+                    is_app = False
+                    exe_path = None
+                    
+                    # Look for .exe files directly in the directory
+                    for file in os.listdir(app_path):
+                        if file.endswith(".exe") and not file.startswith("unins"):
+                            is_app = True
+                            exe_path = os.path.join(app_path, file)
+                            break
+                    
+                    # If no .exe found, look in bin or similar subdirectories
+                    if not is_app:
+                        for subdir in ["bin", "program", "app"]:
+                            subdir_path = os.path.join(app_path, subdir)
+                            if os.path.exists(subdir_path) and os.path.isdir(subdir_path):
+                                for file in os.listdir(subdir_path):
+                                    if file.endswith(".exe") and not file.startswith("unins"):
+                                        is_app = True
+                                        exe_path = os.path.join(subdir_path, file)
+                                        break
+                    
+                    if is_app:
+                        app_id = app_dir.lower().replace(" ", "-")
+                        app_info = {
+                            "id": f"fs-{app_id}",
+                            "name": app_dir,
+                            "path": app_path,
+                            "source": "file_system",
+                        }
+                        
+                        if exe_path:
+                            app_info["executable"] = exe_path
+                        
+                        apps.append(app_info)
+        except Exception as e:
+            logger.debug(f"Error scanning directory {install_dir}: {e}")
     
     return apps
 
-def _scan_dot_files() -> List[Dict[str, Any]]:
+def _get_available_drives() -> List[str]:
     """
-    Scan for dot files in the user's home directory.
+    Get a list of available drive letters on Windows.
     
     Returns:
-        List[Dict[str, Any]]: A list of dictionaries containing information about dot files.
+        List[str]: A list of drive letters with trailing backslash (e.g., ["C:\\", "D:\\"])
+    """
+    drives = []
+    
+    try:
+        # Get all logical drives
+        for drive in range(ord('A'), ord('Z') + 1):
+            drive_letter = chr(drive) + ":\\"
+            if os.path.exists(drive_letter):
+                drives.append(drive_letter)
+    except Exception as e:
+        logger.error(f"Error getting available drives: {e}")
+        # Fallback to common drives
+        drives = ["C:\\"]
+    
+    return drives
+
+def _scan_dot_files() -> List[Dict[str, Any]]:
+    """
+    Scan for dot files and application-specific directories in the user's home directory.
+    
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing information about dot files and app data.
     """
     apps = []
     
     home_dir = os.path.expanduser("~")
     
+    # Common application data directories to check
+    app_data_dirs = {
+        ".vscode": "Visual Studio Code",
+        ".atom": "Atom Editor",
+        ".config": "Configuration Files",
+        ".ssh": "SSH Configuration",
+        ".aws": "AWS CLI Configuration",
+        ".docker": "Docker Configuration",
+        ".npm": "NPM Configuration",
+        ".gradle": "Gradle Configuration",
+        ".m2": "Maven Configuration",
+        ".android": "Android SDK Configuration",
+        ".bash_history": "Bash History",
+        ".zsh_history": "Zsh History",
+        ".bashrc": "Bash Configuration",
+        ".zshrc": "Zsh Configuration",
+        ".gitconfig": "Git Configuration",
+        ".profile": "Shell Profile",
+        ".vim": "Vim Configuration",
+        ".vimrc": "Vim Configuration",
+        ".emacs.d": "Emacs Configuration",
+        ".mozilla": "Mozilla Firefox Data",
+        ".thunderbird": "Thunderbird Data",
+        ".config/google-chrome": "Google Chrome Data",
+        ".config/chromium": "Chromium Data",
+        ".config/Code": "VS Code Configuration",
+        ".config/discord": "Discord Configuration",
+        ".config/spotify": "Spotify Configuration",
+        ".config/slack": "Slack Configuration",
+        ".config/teams": "Microsoft Teams Configuration",
+    }
+    
+    # Scan for dot files and directories
     for item in os.listdir(home_dir):
-        if item.startswith(".") and not item.startswith(".git"):
-            item_path = os.path.join(home_dir, item)
-            
-            # Skip common system dot files
-            if item in [".cache", ".config", ".local"]:
+        item_path = os.path.join(home_dir, item)
+        
+        # Process dot files and directories
+        if item.startswith("."):
+            # Skip git directories and common system directories
+            if item in [".git", ".cache", ".local"] or item.startswith(".git"):
                 continue
+            
+            # Check if this is a known application data directory
+            app_name = app_data_dirs.get(item, f"Dot File: {item}")
             
             apps.append({
                 "id": f"dotfile-{item[1:]}",
-                "name": f"Dot File: {item}",
+                "name": app_name,
                 "path": item_path,
                 "source": "dot_file",
+                "type": "configuration" if os.path.isdir(item_path) else "file"
             })
+    
+    # Scan AppData directories for application data
+    appdata_dirs = [
+        os.path.join(os.environ["APPDATA"]),
+        os.path.join(os.environ["LOCALAPPDATA"]),
+    ]
+    
+    for appdata_dir in appdata_dirs:
+        if os.path.exists(appdata_dir):
+            try:
+                for app_dir in os.listdir(appdata_dir):
+                    app_path = os.path.join(appdata_dir, app_dir)
+                    if os.path.isdir(app_path):
+                        # Skip system directories
+                        if app_dir in ["Microsoft", "Windows", "Temp", "History", "Packages"]:
+                            continue
+                        
+                        apps.append({
+                            "id": f"appdata-{app_dir.lower().replace(' ', '-')}",
+                            "name": f"App Data: {app_dir}",
+                            "path": app_path,
+                            "source": "app_data",
+                            "type": "user_data"
+                        })
+            except Exception as e:
+                logger.debug(f"Error scanning AppData directory {appdata_dir}: {e}")
     
     return apps
 
@@ -223,16 +431,37 @@ def _calculate_size(path: str) -> int:
     Returns:
         int: The size in bytes.
     """
+    if not os.path.exists(path):
+        return 0
+    
     if os.path.isfile(path):
-        return os.path.getsize(path)
+        try:
+            return os.path.getsize(path)
+        except Exception as e:
+            logger.debug(f"Error getting size of file {path}: {e}")
+            return 0
     
     total_size = 0
-    for dirpath, dirnames, filenames in os.walk(path):
-        for filename in filenames:
-            file_path = os.path.join(dirpath, filename)
+    try:
+        # Use psutil for faster disk usage calculation if available
+        if hasattr(psutil, 'disk_usage'):
             try:
-                total_size += os.path.getsize(file_path)
+                return psutil.disk_usage(path).used
             except:
+                # Fall back to manual calculation
                 pass
+        
+        # Manual calculation
+        for dirpath, dirnames, filenames in os.walk(path):
+            for filename in filenames:
+                file_path = os.path.join(dirpath, filename)
+                try:
+                    # Skip symbolic links to avoid infinite loops
+                    if not os.path.islink(file_path):
+                        total_size += os.path.getsize(file_path)
+                except Exception as e:
+                    logger.debug(f"Error getting size of file {file_path}: {e}")
+    except Exception as e:
+        logger.debug(f"Error walking directory {path}: {e}")
     
     return total_size
