@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}ReformatBackup - Restore{% endblock %}
+
+{% block content %}
+<div id="alerts-container"></div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h1>Restore Application</h1>
+        <p class="lead">Restore {{ app_name }} from a previous backup.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Application Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Name:</strong> {{ app_name }}</p>
+                <p><strong>Location:</strong> {{ app_path }}</p>
+                <p><strong>Size:</strong> {{ app_size|filesizeformat }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Source:</strong> 
+                    {% if app_source == 'registry' %}
+                    <span class="badge bg-primary">Registry</span>
+                    {% elif app_source == 'file_system' %}
+                    <span class="badge bg-secondary">File System</span>
+                    {% elif app_source == 'dot_file' %}
+                    <span class="badge bg-info">Dot File</span>
+                    {% elif app_source == 'app_data' %}
+                    <span class="badge bg-warning">App Data</span>
+                    {% else %}
+                    <span class="badge bg-dark">{{ app_source }}</span>
+                    {% endif %}
+                </p>
+                {% if app_publisher %}
+                <p><strong>Publisher:</strong> {{ app_publisher }}</p>
+                {% endif %}
+                {% if app_version %}
+                <p><strong>Version:</strong> {{ app_version }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Backup Versions</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if versions %}
+                <div class="list-group list-group-flush version-list">
+                    {% for version in versions %}
+                    <a href="#" class="list-group-item list-group-item-action version-item" data-backup-id="{{ version.backup_id }}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ version.timestamp|format_timestamp }}</h6>
+                            <small>{{ version.size|filesizeformat }}</small>
+                        </div>
+                        {% if version.notes %}
+                        <p class="mb-1 text-truncate"><small>{{ version.notes }}</small></p>
+                        {% else %}
+                        <p class="mb-1 text-muted"><small>No notes</small></p>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info m-3">
+                    No backups found for this application.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Restore Options</h5>
+            </div>
+            <div class="card-body">
+                {% if versions %}
+                <form id="restore-form" data-app-id="{{ app_id }}">
+                    <div class="mb-3">
+                        <label class="form-label">Selected Backup</label>
+                        <div class="selected-version-info alert alert-secondary">
+                            <p class="mb-0">Please select a backup version from the list.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="backup-first" checked>
+                            <label class="form-check-label" for="backup-first">Backup current state before restoring</label>
+                        </div>
+                        <div class="form-text">This creates a backup of the current state before restoring, allowing you to revert if needed.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="restore-dot-files">
+                            <label class="form-check-label" for="restore-dot-files">Restore dot files and configuration directories</label>
+                        </div>
+                        <div class="form-text">When enabled, configuration files in your home directory will be restored.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Conflict Resolution</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="conflict-resolution" id="overwrite-all" value="overwrite-all" checked>
+                            <label class="form-check-label" for="overwrite-all">
+                                Overwrite all files
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="conflict-resolution" id="keep-newer" value="keep-newer">
+                            <label class="form-check-label" for="keep-newer">
+                                Keep newer files
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="conflict-resolution" id="ask" value="ask">
+                            <label class="form-check-label" for="ask">
+                                Ask for each conflict
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" id="restore-button" class="btn btn-primary" disabled>
+                            Restore
+                        </button>
+                    </div>
+                    
+                    <div id="restore-progress" class="progress mt-4 d-none">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    <p>No backups available for this application.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Application List</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4 version-details d-none">
+            <div class="card-header">
+                <h5 class="mb-0">Backup Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Timestamp</label>
+                    <p class="version-timestamp"></p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Size</label>
+                    <p class="version-size"></p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <div class="version-notes"></div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Included Paths</label>
+                    <ul class="version-paths"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Conflict Resolution Modal -->
+<div class="modal fade" id="conflictModal" tabindex="-1" aria-labelledby="conflictModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="conflictModalLabel">File Conflict</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>The following file already exists:</p>
+                <p class="conflict-file-path fw-bold"></p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Existing File</h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Modified:</strong> <span class="existing-file-date"></span></p>
+                                <p><strong>Size:</strong> <span class="existing-file-size"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Backup File</h6>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Modified:</strong> <span class="backup-file-date"></span></p>
+                                <p><strong>Size:</strong> <span class="backup-file-size"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="keep-existing">Keep Existing</button>
+                <button type="button" class="btn btn-primary" id="use-backup">Use Backup</button>
+                <button type="button" class="btn btn-info" id="keep-both">Keep Both</button>
+                <div class="form-check ms-3">
+                    <input class="form-check-input" type="checkbox" id="apply-to-all">
+                    <label class="form-check-label" for="apply-to-all">
+                        Apply to all conflicts
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Confirmation Modal -->
+<div class="modal fade" id="confirmRestoreModal" tabindex="-1" aria-labelledby="confirmRestoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmRestoreModalLabel">Confirm Restore</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <p><strong>Warning:</strong> This will overwrite the current application data with the selected backup.</p>
+                    <p>Are you sure you want to proceed?</p>
+                </div>
+                
+                <p><strong>Application:</strong> <span id="confirm-app-name"></span></p>
+                <p><strong>Backup Date:</strong> <span id="confirm-backup-date"></span></p>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="confirm-understand">
+                    <label class="form-check-label" for="confirm-understand">
+                        I understand that this action cannot be undone
+                        {% if backup_first_checked %}
+                        (except by restoring the automatic backup that will be created)
+                        {% endif %}
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-restore-button" disabled>Restore</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/restore.js') }}"></script>
+{% endblock %}

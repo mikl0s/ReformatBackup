@@ -108,22 +108,22 @@ graph TD
   - [x] Add metadata storage alongside backups
 
 ### Epic 5: Restore Functionality
-- [ ] **Story 5.1**: Implement backup version management
-  - [ ] Create UI for displaying backup versions
-  - [ ] Develop functions to list available backups
-  - [ ] Add metadata display for backups
+- [x] **Story 5.1**: Implement backup version management
+  - [x] Create UI for displaying backup versions
+  - [x] Develop functions to list available backups
+  - [x] Add metadata display for backups
 
-- [ ] **Story 5.2**: Develop restore options
-  - [ ] Implement direct restore functionality
-  - [ ] Create backup-then-restore workflow
-  - [ ] Add confirmation and warning dialogs
-  - [ ] Include options for handling existing dot files/directories
+- [x] **Story 5.2**: Develop restore options
+  - [x] Implement direct restore functionality
+  - [x] Create backup-then-restore workflow
+  - [x] Add confirmation and warning dialogs
+  - [x] Include options for handling existing dot files/directories
 
-- [ ] **Story 5.3**: Implement restore process
-  - [ ] Develop extraction of 7zip archives
-  - [ ] Create functions to place files in correct locations
-  - [ ] Add progress tracking and reporting
-  - [ ] Ensure proper restoration of hidden files with correct permissions
+- [x] **Story 5.3**: Implement restore process
+  - [x] Develop extraction of 7zip archives
+  - [x] Create functions to place files in correct locations
+  - [x] Add progress tracking and reporting
+  - [x] Ensure proper restoration of hidden files with correct permissions
 
 ### Epic 6: User Interface
 - [ ] **Story 6.1**: Develop base UI framework

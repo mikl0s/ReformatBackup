@@ -108,12 +108,19 @@ Backups are named with the pattern `<appname>-<timestamp>.7z` and stored in the 
 ### 5. Restore Functionality (`restore.py`)
 
 The restore module manages:
-- Listing available backup versions for an application
-- Extracting backups to their original locations
+- Listing available backup versions for an application with detailed metadata
+- Extracting backups to their original locations with configurable conflict resolution
 - Optionally backing up current state before restoring
 - Handling metadata and version management
+- Providing detailed backup information for user decision-making
+- Supporting dot files restoration with specialized handling
+- Tracking restore progress with file counts and status reporting
 
-Two restore options are provided: direct restore or backup-then-restore.
+Multiple restore options are provided:
+- Direct restore (overwrite existing files)
+- Backup-then-restore (create a backup before restoring)
+- Selective restore (choose which files to restore)
+- Conflict resolution strategies (overwrite all, keep newer files, or ask for each conflict)
 
 ### 6. Utility Functions (`utils.py`)
 
@@ -153,6 +160,7 @@ The main application view includes:
 - Statistics about scanned applications and drive usage
 - A modal dialog explaining the scanning process and detection methods
 - Quick backup functionality and a dedicated backup configuration option
+- Restore options for each application with backup history
 
 The backup interface includes:
 - Configurable compression level settings
@@ -161,6 +169,15 @@ The backup interface includes:
 - A list of selected applications with size and location information
 - Recent backup history with restore options
 - Progress indicators during backup operations
+
+The restore interface includes:
+- A list of available backup versions with timestamps and sizes
+- Detailed backup metadata including notes and included paths
+- Options for backup-before-restore and dot files restoration
+- Conflict resolution strategies (overwrite all, keep newer, ask for each conflict)
+- Confirmation dialogs with clear warnings about data replacement
+- Progress tracking during the restore process
+- File-by-file conflict resolution for advanced users
 
 The UI includes a settings page for managing backup location, theme preferences, update settings, and other application options. It also features an update notification system with a modal dialog for one-click updates.
 
