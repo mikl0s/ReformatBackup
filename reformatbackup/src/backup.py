@@ -11,90 +11,15 @@ import datetime
 from typing import Dict, Any, List, Optional
 import py7zr
 
+from reformatbackup.src.config import (
+    get_backup_location,
+    set_backup_location,
+    get_compression_level,
+    get_max_backups_per_app
+)
+
 # Set up logging
 logger = logging.getLogger(__name__)
-
-def get_config_path() -> str:
-    """
-    Get the path to the configuration file.
-    
-    Returns:
-        str: The path to the configuration file.
-    """
-    return os.path.join(os.path.expanduser("~"), ".reformatbackup")
-
-def get_backup_location() -> str:
-    """
-    Get the backup location from the configuration file.
-    
-    Returns:
-        str: The backup location.
-    """
-    config_path = get_config_path()
-    
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r") as f:
-                config = json.load(f)
-                return config.get("backup_location", os.path.join(os.path.expanduser("~"), "Backups"))
-        except Exception as e:
-            logger.error(f"Error loading configuration: {e}")
-    
-    # Default backup location
-    default_location = os.path.join(os.path.expanduser("~"), "Backups")
-    
-    # Create the default backup location if it doesn't exist
-    if not os.path.exists(default_location):
-        try:
-            os.makedirs(default_location)
-        except Exception as e:
-            logger.error(f"Error creating default backup location: {e}")
-    
-    # Save the default backup location to the configuration file
-    set_backup_location(default_location)
-    
-    return default_location
-
-def set_backup_location(location: str) -> bool:
-    """
-    Set the backup location in the configuration file.
-    
-    Args:
-        location (str): The backup location.
-    
-    Returns:
-        bool: True if successful, False otherwise.
-    """
-    config_path = get_config_path()
-    
-    # Create the backup location if it doesn't exist
-    if not os.path.exists(location):
-        try:
-            os.makedirs(location)
-        except Exception as e:
-            logger.error(f"Error creating backup location: {e}")
-            return False
-    
-    # Load existing configuration if it exists
-    config = {}
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, "r") as f:
-                config = json.load(f)
-        except Exception as e:
-            logger.error(f"Error loading configuration: {e}")
-    
-    # Update the backup location
-    config["backup_location"] = location
-    
-    # Save the configuration
-    try:
-        with open(config_path, "w") as f:
-            json.dump(config, f)
-        return True
-    except Exception as e:
-        logger.error(f"Error saving configuration: {e}")
-        return False
 
 def backup_app(app_id: str) -> Dict[str, Any]:
     """
@@ -162,7 +87,8 @@ def backup_app(app_id: str) -> Dict[str, Any]:
     
     # Create the backup
     try:
-        with py7zr.SevenZipFile(backup_path, mode="w", filters=[{"id": py7zr.FILTER_LZMA2, "preset": 9}]) as archive:
+        compression_level = get_compression_level()
+        with py7zr.SevenZipFile(backup_path, mode="w", filters=[{"id": py7zr.FILTER_LZMA2, "preset": compression_level}]) as archive:
             for path in paths_to_backup:
                 if os.path.isdir(path):
                     # Add directory contents
@@ -202,6 +128,10 @@ def backup_app(app_id: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error saving metadata: {e}")
     
+    # Clean up old backups if we exceed the maximum number of backups per app
+    max_backups = get_max_backups_per_app()
+    cleanup_old_backups(app_id, max_backups)
+    
     return {
         "success": True,
         "app_id": app_id,
@@ -211,6 +141,47 @@ def backup_app(app_id: str) -> Dict[str, Any]:
         "timestamp": timestamp,
         "size": os.path.getsize(backup_path) if os.path.exists(backup_path) else 0,
     }
+    
+def cleanup_old_backups(app_id: str, max_backups: int) -> None:
+    """
+    Clean up old backups for an application if we exceed the maximum number of backups.
+    
+    Args:
+        app_id (str): The ID of the application.
+        max_backups (int): The maximum number of backups to keep.
+    """
+    backup_location = get_backup_location()
+    
+    # Find all backups for this application
+    backups = []
+    for filename in os.listdir(backup_location):
+        if filename.startswith(f"{app_id}-") and filename.endswith(".7z"):
+            backup_path = os.path.join(backup_location, filename)
+            metadata_path = os.path.join(backup_location, filename.replace(".7z", ".json"))
+            timestamp = filename.split("-")[1].split(".")[0] if "-" in filename else ""
+            
+            backups.append({
+                "backup_path": backup_path,
+                "metadata_path": metadata_path,
+                "timestamp": timestamp
+            })
+    
+    # Sort backups by timestamp (newest first)
+    backups.sort(key=lambda x: x["timestamp"], reverse=True)
+    
+    # Remove old backups if we exceed the maximum
+    if len(backups) > max_backups:
+        for backup in backups[max_backups:]:
+            try:
+                if os.path.exists(backup["backup_path"]):
+                    os.remove(backup["backup_path"])
+                    logger.info(f"Removed old backup: {backup['backup_path']}")
+                
+                if os.path.exists(backup["metadata_path"]):
+                    os.remove(backup["metadata_path"])
+                    logger.info(f"Removed old metadata: {backup['metadata_path']}")
+            except Exception as e:
+                logger.error(f"Error removing old backup: {e}")
 
 def backup_dot_files(app_id: str) -> Dict[str, Any]:
     """

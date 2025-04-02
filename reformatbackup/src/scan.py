@@ -7,21 +7,20 @@ This module handles scanning for installed applications on Windows 11.
 import os
 import json
 import logging
+import datetime
 from typing import Dict, List, Any, Optional
 import winreg
 import psutil
 
+from reformatbackup.src.config import (
+    get_scan_cache_path,
+    get_auto_rescan,
+    set_last_scan_time,
+    get_last_scan_time
+)
+
 # Set up logging
 logger = logging.getLogger(__name__)
-
-def get_cache_path() -> str:
-    """
-    Get the path to the cache file.
-    
-    Returns:
-        str: The path to the cache file.
-    """
-    return os.path.join(os.path.expanduser("~"), "appscan.json")
 
 def scan_installed_apps(force_rescan: bool = False) -> List[Dict[str, Any]]:
     """
@@ -33,7 +32,20 @@ def scan_installed_apps(force_rescan: bool = False) -> List[Dict[str, Any]]:
     Returns:
         List[Dict[str, Any]]: A list of dictionaries containing information about installed applications.
     """
-    cache_path = get_cache_path()
+    cache_path = get_scan_cache_path()
+    auto_rescan = get_auto_rescan()
+    last_scan_time = get_last_scan_time()
+    
+    # If auto_rescan is enabled and we haven't scanned in the last 24 hours, force a rescan
+    if auto_rescan and last_scan_time:
+        try:
+            last_scan_datetime = datetime.datetime.strptime(last_scan_time, "%Y%m%d-%H%M%S")
+            time_since_last_scan = datetime.datetime.now() - last_scan_datetime
+            if time_since_last_scan.days >= 1:
+                logger.info("Auto-rescan triggered: Last scan was more than 24 hours ago")
+                force_rescan = True
+        except Exception as e:
+            logger.error(f"Error parsing last scan time: {e}")
     
     # Check if cache exists and we're not forcing a rescan
     if os.path.exists(cache_path) and not force_rescan:
@@ -70,10 +82,15 @@ def scan_installed_apps(force_rescan: bool = False) -> List[Dict[str, Any]]:
             app["size"] = _calculate_size(app["path"])
             app["drive"] = os.path.splitdrive(app["path"])[0]
     
-    # Save to cache
+    # Save to cache and update last scan time
     try:
         with open(cache_path, "w") as f:
             json.dump(apps, f)
+        
+        # Update last scan time
+        timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        set_last_scan_time(timestamp)
+        logger.info(f"Scan completed and cached at {timestamp}")
     except Exception as e:
         logger.error(f"Error saving cache: {e}")
     
